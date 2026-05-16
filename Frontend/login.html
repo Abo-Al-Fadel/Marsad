@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="Marsad — Log in to your account to manage and verify incident reports across Lebanon.">
+  <meta name="author" content="Marsad Project">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>Marsad — Login</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar" id="navbar">
+    <div class="container">
+      <a href="index.html" class="navbar__logo">
+        <span class="navbar__logo-icon"></span>
+        Marsad
+      </a>
+      <button class="navbar__toggle" id="nav-toggle" aria-label="Toggle navigation">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <ul class="navbar__links" id="nav-links">
+        <li><a href="index.html" class="navbar__link">
+            <svg class="navbar__link-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+              <polyline points="9 22 9 12 15 12 15 22" />
+            </svg>
+            Home
+          </a></li>
+        <li><a href="map.html" class="navbar__link">
+            <svg class="navbar__link-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            Map
+          </a></li>
+        <li><a href="report.html" class="navbar__link">
+            <svg class="navbar__link-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="16" />
+              <line x1="8" y1="12" x2="16" y2="12" />
+            </svg>
+            Report
+          </a></li>
+        <li><a href="login.html" class="navbar__link navbar__link--active">
+            <svg class="navbar__link-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+            Login
+          </a></li>
+        <li><a href="register.html" class="navbar__link">
+            <svg class="navbar__link-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="8.5" cy="7" r="4" />
+              <line x1="20" y1="8" x2="20" y2="14" />
+              <line x1="23" y1="11" x2="17" y2="11" />
+            </svg>
+            Register
+          </a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Login Form -->
+  <main class="form-page">
+    <div class="form-container">
+      <h1 class="form__title">Welcome Back</h1>
+      <p class="form__subtitle">Log in to access your dashboard and manage reports.</p>
+      <form id="login-form" method="POST" action="" novalidate>
+        <div class="form__group">
+          <label class="form__label" for="login_email">Email Address</label>
+          <input type="email" class="form__input" id="login_email" name="email" placeholder="you@example.com"
+            autocomplete="email" required />
+          <div class="form__error" id="login_email-error"></div>
+        </div>
+        <div class="form__group">
+          <label class="form__label" for="login_password">Password</label>
+          <input type="password" class="form__input" id="login_password" name="password"
+            placeholder="Minimum 6 characters" autocomplete="current-password" required />
+          <div class="form__error" id="login_password-error"></div>
+        </div>
+        <button type="submit" class="form__submit" id="login-submit">Log In</button>
+        <div class="form__success" id="login-success">✓ Login successful. Redirecting…</div>
+      </form>
+      <p class="form__footer">
+        Don't have an account? <a href="register.html">Create one</a>
+      </p>
+    </div>
+  </main>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Back-to-Top Button -->
+  <button class="back-to-top" id="back-to-top" aria-label="Back to top" title="Back to top">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+      stroke-linejoin="round">
+      <polyline points="18 15 12 9 6 15" />
+    </svg>
+  </button>
+
+  <!-- Footer -->
+  <footer class="footer" id="footer">
+    <div class="container">
+      <p class="footer__text">
+        &copy; 2026 <span>Marsad</span> — Incident Monitoring System
+      </p>
+      <div class="footer__status">
+        <span class="footer__status-dot"></span>
+        System Operational
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/utils.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/votes.js"></script>
+  <script src="js/autocomplete.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/forms.js"></script>
+  <script src="js/main.js"></script>
+
+</body>
+
+</html>

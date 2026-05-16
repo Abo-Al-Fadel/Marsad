@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="Marsad — Interactive map of real-time incidents across Lebanon. Live markers for airstrikes, explosions, drone activity, and shelling.">
+  <meta name="author" content="Marsad Project">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>Marsad — Incident Map</title>
+
+  <!-- Leaflet.js CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+  <!-- Project stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+
+</head>
+
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar" id="navbar">
+    <div class="container">
+
+      <a href="index.html" class="navbar__logo">
+        <span class="navbar__logo-icon"></span>
+        Marsad
+      </a>
+
+
+      <button class="navbar__toggle" id="nav-toggle" aria-label="Toggle navigation">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+
+      <ul class="navbar__links" id="nav-links">
+        <li><a href="index.html" class="navbar__link">
+            <svg class="navbar__link-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+              <polyline points="9 22 9 12 15 12 15 22" />
+            </svg>
+            Home
+          </a></li>
+        <li><a href="map.html" class="navbar__link navbar__link--active">
+            <svg class="navbar__link-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            Map
+          </a></li>
+        <li><a href="report.html" class="navbar__link">
+            <svg class="navbar__link-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="16" />
+              <line x1="8" y1="12" x2="16" y2="12" />
+            </svg>
+            Report
+          </a></li>
+        <li><a href="login.html" class="navbar__link">
+            <svg class="navbar__link-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+            Login
+          </a></li>
+        <li><a href="register.html" class="navbar__link">
+            <svg class="navbar__link-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="8.5" cy="7" r="4" />
+              <line x1="20" y1="8" x2="20" y2="14" />
+              <line x1="23" y1="11" x2="17" y2="11" />
+            </svg>
+            Register
+          </a></li>
+      </ul>
+    </div>
+  </nav>
+
+
+  <!-- Map Section -->
+  <div class="map-wrapper">
+
+
+    <div id="map"></div>
+
+
+    <div class="map-header">
+      <div class="live-indicator">
+        <span class="live-indicator__dot"></span>
+        Live
+      </div>
+      <span class="map-header__title">Incident Map — Lebanon</span>
+      <span class="map-header__count" id="map-incident-count"></span>
+    </div>
+
+
+    <div class="map-legend">
+      <div class="map-legend__title">Incident Types</div>
+      <div class="map-legend__list" style="max-height: 250px; overflow-y: auto; padding-right: 5px;">
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#cc0000;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <path d="M22 2L11 13" />
+              <path d="M22 2L15 22l-4-9-9-4z" />
+            </svg></span>
+          <span class="map-legend__label">Airstrike</span>
+        </div>
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#888888;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 8v4l3 3" />
+            </svg></span>
+          <span class="map-legend__label">Ambush</span>
+        </div>
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#888888;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+              <line x1="4" y1="22" x2="4" y2="15" />
+            </svg></span>
+          <span class="map-legend__label">Armed Clash</span>
+        </div>
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#8833cc;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+            </svg></span>
+          <span class="map-legend__label">Artillery Fire</span>
+        </div>
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#888888;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="15" y1="9" x2="9" y2="15" />
+              <line x1="9" y1="9" x2="15" y2="15" />
+            </svg></span>
+          <span class="map-legend__label">Assassination Attempt</span>
+        </div>
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#888888;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <line x1="9" y1="3" x2="9" y2="21" />
+              <line x1="15" y1="3" x2="15" y2="21" />
+            </svg></span>
+          <span class="map-legend__label">Blockade</span>
+        </div>
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#e05555;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" />
+              <circle cx="12" cy="12" r="4" />
+              <circle cx="12" cy="12" r="1" />
+            </svg></span>
+          <span class="map-legend__label">Bombing</span>
+        </div>
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#ff8c00;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <path d="M5 17h14v-5l-2-4H7l-2 4v5z" />
+              <circle cx="7.5" cy="17" r="1.5" />
+              <circle cx="16.5" cy="17" r="1.5" />
+              <polygon points="12 2 9 6 15 6 12 2" />
+            </svg></span>
+          <span class="map-legend__label">Car Bomb</span>
+        </div>
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#888888;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <path
+                d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2" />
+            </svg></span>
+          <span class="map-legend__label">Chemical Attack</span>
+        </div>
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#888888;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="8" r="3" />
+              <circle cx="7" cy="15" r="3" />
+              <circle cx="17" cy="15" r="3" />
+            </svg></span>
+          <span class="map-legend__label">Cluster Munitions</span>
+        </div>
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#888888;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <rect x="2" y="3" width="20" height="14" rx="2" />
+              <line x1="8" y1="21" x2="16" y2="21" />
+              <line x1="12" y1="17" x2="12" y2="21" />
+            </svg></span>
+          <span class="map-legend__label">Cyber Attack</span>
+        </div>
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#888888;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <path d="M2 22h20" />
+              <path d="M6 18V4l6 4 6-4v14" />
+            </svg></span>
+          <span class="map-legend__label">Demolition</span>
+        </div>
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#3377ff;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <path d="M12 12m-2 0a2 2 0 1 0 4 0 2 2 0 1 0-4 0" />
+              <path d="M2 7l4 3m12-3l-4 3M2 17l4-3m12 3l-4-3" />
+              <rect x="6" y="10" width="12" height="4" rx="1" />
+            </svg></span>
+          <span class="map-legend__label">Drone Strike</span>
+        </div>
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#888888;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg></span>
+          <span class="map-legend__label">Evacuation</span>
+        </div>
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#ff8c00;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+            </svg></span>
+          <span class="map-legend__label">Explosion</span>
+        </div>
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#ff6633;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <path d="M12 22c4-4 8-7.5 8-12a8 8 0 1 0-16 0c0 4.5 4 8 8 12z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg></span>
+          <span class="map-legend__label">Fire</span>
+        </div>
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#cc6600;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" />
+              <circle cx="12" cy="12" r="6" />
+              <circle cx="12" cy="12" r="2" />
+            </svg></span>
+          <span class="map-legend__label">Gunfire</span>
+        </div>
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#888888;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg></span>
+          <span class="map-legend__label">Hostage Situation</span>
+        </div>
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#ff8c00;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <path
+                d="M12 2v4m0 12v4M2 12h4m12 0h4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83" />
+            </svg></span>
+          <span class="map-legend__label">IED (Improvised Explosive Device)</span>
+        </div>
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#888888;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <polyline points="5 12 12 5 19 12" />
+              <polyline points="5 19 12 12 19 19" />
+            </svg></span>
+          <span class="map-legend__label">Incursion</span>
+        </div>
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#888888;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="12 5 19 12 12 19" />
+            </svg></span>
+          <span class="map-legend__label">Infantry Advance</span>
+        </div>
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#888888;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="7" r="4" />
+              <path d="M5.5 21a6.5 6.5 0 0 1 13 0" />
+              <line x1="3" y1="3" x2="21" y2="21" />
+            </svg></span>
+          <span class="map-legend__label">Kidnapping</span>
+        </div>
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#888888;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <path d="M12 9v4" />
+              <path d="M12 17h.01" />
+              <path d="M3.6 15h16.8" />
+              <path d="M8 15l4-13 4 13" />
+            </svg></span>
+          <span class="map-legend__label">Land Mine</span>
+        </div>
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#888888;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <rect x="2" y="7" width="20" height="14" rx="2" />
+              <path d="M16 7V5a4 4 0 0 0-8 0v2" />
+            </svg></span>
+          <span class="map-legend__label">Looting</span>
+        </div>
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#ff3366;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <path d="M22 2L11 13" />
+              <path d="M22 2L15 22l-4-9-9-4z" />
+            </svg></span>
+          <span class="map-legend__label">Missile Launch</span>
+        </div>
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#8833cc;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+            </svg></span>
+          <span class="map-legend__label">Mortar Fire</span>
+        </div>
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#ff8c00;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <path d="M2 20s2-1 5-1 5 2 10 2 5-1 5-1" />
+              <path d="M4 16l3-10h10l3 10" />
+            </svg></span>
+          <span class="map-legend__label">Naval Bombardment</span>
+        </div>
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#888888;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+              <line x1="1" y1="1" x2="23" y2="23" />
+            </svg></span>
+          <span class="map-legend__label">Power Outage</span>
+        </div>
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#e68a00;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg></span>
+          <span class="map-legend__label">Raid</span>
+        </div>
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#ff3366;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <path d="M22 2L11 13" />
+              <path d="M22 2L15 22l-4-9-9-4z" />
+            </svg></span>
+          <span class="map-legend__label">Rocket Attack</span>
+        </div>
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#888888;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <rect x="2" y="6" width="20" height="12" rx="2" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+              <line x1="6" y1="18" x2="18" y2="6" />
+            </svg></span>
+          <span class="map-legend__label">Roadblock</span>
+        </div>
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#8833cc;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+            </svg></span>
+          <span class="map-legend__label">Shelling</span>
+        </div>
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#cc6600;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" />
+              <circle cx="12" cy="12" r="6" />
+              <circle cx="12" cy="12" r="2" />
+              <line x1="12" y1="2" x2="12" y2="6" />
+              <line x1="12" y1="18" x2="12" y2="22" />
+              <line x1="2" y1="12" x2="6" y2="12" />
+              <line x1="18" y1="12" x2="22" y2="12" />
+            </svg></span>
+          <span class="map-legend__label">Sniper Fire</span>
+        </div>
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#888888;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" />
+            </svg></span>
+          <span class="map-legend__label">Sonic Boom</span>
+        </div>
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#888888;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <rect x="4" y="10" width="16" height="12" rx="1" />
+              <path d="M12 2v8" />
+              <path d="M8 6l4 4 4-4" />
+            </svg></span>
+          <span class="map-legend__label">Supply Drop</span>
+        </div>
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#3377ff;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="2" />
+              <path d="M2 7l4 3m12-3l-4 3M2 17l4-3m12 3l-4-3" />
+              <rect x="6" y="10" width="12" height="4" rx="1" />
+            </svg></span>
+          <span class="map-legend__label">Surveillance Drone</span>
+        </div>
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#888888;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <path d="M8 2h8l2 6H6l2-6z" />
+              <path d="M6 8c0 6-2 14-2 14h16s-2-8-2-14" />
+            </svg></span>
+          <span class="map-legend__label">Tear Gas</span>
+        </div>
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#888888;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <path d="M3 21h18" />
+              <path d="M5 21V7l7-4 7 4v14" />
+              <rect x="9" y="13" width="6" height="8" />
+            </svg></span>
+          <span class="map-legend__label">Tunnel Discovery</span>
+        </div>
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#888888;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <path d="M12 2v4m0 12v4M2 12h4m12 0h4" />
+              <circle cx="12" cy="12" r="5" />
+            </svg></span>
+          <span class="map-legend__label">White Phosphorus</span>
+        </div>
+        <div class="map-legend__item">
+          <span class="map-legend__icon" style="color:#888888;"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 8v4" />
+              <path d="M12 16h.01" />
+            </svg></span>
+          <span class="map-legend__label">Other</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  </div>
+
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+
+  <!-- Back-to-Top Button -->
+  <button class="back-to-top" id="back-to-top" aria-label="Back to top" title="Back to top">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+      stroke-linejoin="round">
+      <polyline points="18 15 12 9 6 15" />
+    </svg>
+  </button>
+
+
+  <!-- Footer -->
+  <footer class="footer" id="footer">
+    <div class="container">
+      <p class="footer__text">
+        &copy; 2026 <span>Marsad</span> — Incident Monitoring System
+      </p>
+      <div class="footer__status">
+        <span class="footer__status-dot"></span>
+        System Operational
+      </div>
+    </div>
+  </footer>
+
+
+  <!-- Scripts -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="js/utils.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/votes.js"></script>
+  <script src="js/autocomplete.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/forms.js"></script>
+  <script src="js/main.js"></script>
+
+</body>
+
+</html>
