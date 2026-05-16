@@ -4,7 +4,7 @@ Welcome to **Marsad**, a university project designed to report and monitor incid
 
 ---
 
-## 🌟 What Does It Do?
+## What Does It Do?
 
 - **Live Map:** See incidents on an interactive map of Lebanon.
 - **Community Moderation:** Users can "Confirm" or "Reject" reports. If a report gets +10 confirms, it becomes "Verified". If it gets -10, it's "Rejected".
@@ -13,7 +13,7 @@ Welcome to **Marsad**, a university project designed to report and monitor incid
 
 ---
 
-## 🛠️ Built With
+## Built With
 
 - **Frontend:** HTML, CSS (Dark Glassmorphism UI), and standard JavaScript.
 - **Backend:** Laravel 11 (PHP).
@@ -21,7 +21,7 @@ Welcome to **Marsad**, a university project designed to report and monitor incid
 
 ---
 
-## 🚀 How to Run It Locally
+## How to Run It Locally
 
 Follow these simple steps to run the project on your computer:
 
@@ -58,7 +58,7 @@ Make sure you have installed:
    ```
    Open `http://localhost:8000` in your browser!
 
-### 🔑 Test Account
+### Test Account
 You can log in with the default test account:
 - **Email:** `system@marsad.lb`
 - **Password:** `password123`
