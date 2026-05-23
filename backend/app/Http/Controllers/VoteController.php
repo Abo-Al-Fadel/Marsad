@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 
 class VoteController extends Controller
 {
-    // Same action again = remove vote, different action = switch vote
+    // Cast, switch, or remove a vote on an incident (toggle logic)
     public function vote(Request $request, $incidentId)
     {
         $request->validate([
@@ -25,7 +25,7 @@ class VoteController extends Controller
 
         if ($existingVote) {
             if ($existingVote->action === $action) {
-                // Same action = toggle off (undo the vote)
+                // Same action clicked again → undo (remove the vote)
                 if ($action === 'confirm') {
                     $incident->confirms = max(0, $incident->confirms - 1);
                 } else {
@@ -43,7 +43,7 @@ class VoteController extends Controller
                     'status'   => $incident->status,
                 ]);
             } else {
-                // Different action = switch the vote
+                // Different action → switch vote (e.g., confirm→reject)
                 if ($existingVote->action === 'confirm') {
                     $incident->confirms = max(0, $incident->confirms - 1);
                 } else {
@@ -72,7 +72,7 @@ class VoteController extends Controller
             }
         }
 
-        // First time voting on this incident
+        // First time voting on this incident → create new vote record
         Vote::create([
             'user_id'     => $user->id,
             'incident_id' => $incident->id,
@@ -97,7 +97,7 @@ class VoteController extends Controller
         ]);
     }
 
-    // Get the current user's vote for a specific incident
+    // Get the current user's vote on a specific incident
     public function getUserVote(Request $request, $incidentId)
     {
         $vote = Vote::where('user_id', $request->user()->id)
@@ -109,7 +109,7 @@ class VoteController extends Controller
         ]);
     }
 
-    // Get all votes by the current user (used to bulk-load vote state on page load)
+    // Get all votes by the current user (used to bulk-load state on page load)
     public function getUserVotes(Request $request)
     {
         $votes = Vote::where('user_id', $request->user()->id)

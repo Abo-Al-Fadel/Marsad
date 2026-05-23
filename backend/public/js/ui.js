@@ -219,7 +219,7 @@ function openIncidentModal(id) {
     statusEl.className = 'status-badge status-badge--' + statusClass(incident.status);
     statusEl.textContent = incident.status;
   }
-  modal.classList.add('modal--visible');
+  modal.classList.add('modal-overlay--visible');
   document.body.style.overflow = 'hidden';
 }
 
@@ -227,7 +227,7 @@ function openIncidentModal(id) {
 function closeIncidentModal() {
   const modal = document.getElementById('incident-modal');
   if (!modal) return;
-  modal.classList.remove('modal--visible');
+  modal.classList.remove('modal-overlay--visible');
   document.body.style.overflow = '';
 }
 
@@ -243,7 +243,7 @@ function initIncidentModal() {
     const closeBtn = modal.querySelector('.modal__close');
     if (closeBtn) closeBtn.addEventListener('click', closeIncidentModal);
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && modal.classList.contains('modal--visible')) closeIncidentModal();
+      if (e.key === 'Escape' && modal.classList.contains('modal-overlay--visible')) closeIncidentModal();
     });
   }
   container.addEventListener('click', (e) => {

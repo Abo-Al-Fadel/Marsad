@@ -5,43 +5,23 @@ use App\Http\Controllers\IncidentController;
 use App\Http\Controllers\VoteController;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Public endpoints (no auth required):
-|   - GET  /api/incidents        → List/filter incidents
-|   - GET  /api/incidents/{id}   → Single incident
-|   - GET  /api/stats            → Dashboard statistics
-|   - POST /api/register         → Create account
-|   - POST /api/login            → Login
-|
-| Protected endpoints (auth required):
-|   - POST /api/logout                     → Logout
-|   - GET  /api/user                       → Current user
-|   - POST /api/incidents                  → Submit report
-|   - POST /api/incidents/{id}/vote        → Cast vote
-|   - GET  /api/incidents/{id}/vote        → Get user's vote
-|   - GET  /api/user/votes                 → All user votes
-|
-*/
+// Auth (Public)
+Route::post('/register', [AuthController::class, 'register']); // Create account → returns token
+Route::post('/login',    [AuthController::class, 'login']);    // Login → returns token
 
-// --- Public routes ---
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login',    [AuthController::class, 'login']);
+// Incidents & Stats (Public)
+Route::get('/incidents',      [IncidentController::class, 'index']); // List/filter all incidents
+Route::get('/incidents/{id}', [IncidentController::class, 'show']);  // Get single incident by ID
+Route::get('/stats',          [IncidentController::class, 'stats']); // Total/verified/unverified/rejected counts
 
-Route::get('/incidents',      [IncidentController::class, 'index']);
-Route::get('/incidents/{id}', [IncidentController::class, 'show']);
-Route::get('/stats',          [IncidentController::class, 'stats']);
-
-// --- Protected routes (require Sanctum token) ---
+// Protected (requires auth:sanctum)
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/user',    [AuthController::class, 'user']);
+    Route::post('/logout', [AuthController::class, 'logout']); // Revoke token & clear session
+    Route::get('/user',    [AuthController::class, 'user']);    // Get current logged-in user
 
-    Route::post('/incidents',             [IncidentController::class, 'store']);
-    Route::post('/incidents/{id}/vote',   [VoteController::class, 'vote']);
-    Route::get('/incidents/{id}/vote',    [VoteController::class, 'getUserVote']);
-    Route::get('/user/votes',             [VoteController::class, 'getUserVotes']);
+    Route::post('/incidents', [IncidentController::class, 'store']); // Submit new incident report
+    Route::post('/incidents/{id}/vote', [VoteController::class, 'vote']);         // Cast/switch/remove vote
+    Route::get('/incidents/{id}/vote',  [VoteController::class, 'getUserVote']);   // Get user's vote on one incident
+    Route::get('/user/votes',           [VoteController::class, 'getUserVotes']);   // Get all user's votes (bulk load)
 });
+

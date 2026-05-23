@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 
 class IncidentController extends Controller
 {
-    // List all incidents, supports filtering by location, type, status, and free-text search
+    // List all incidents with optional filtering by location, type, status, or free-text search
     public function index(Request $request)
     {
         $query = Incident::query()->orderBy('time', 'desc');
@@ -37,7 +37,7 @@ class IncidentController extends Controller
         return response()->json($query->get());
     }
 
-    // Create a new incident report (requires authentication)
+    // Create a new incident report (auto-generates title, sets status to Unverified)
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -46,7 +46,7 @@ class IncidentController extends Controller
             'time'     => 'required|date',
             'note'     => 'nullable|string|max:2000',
         ]);
-        // auto title
+
         $title = $validated['type'] . ' reported in ' . $validated['location'];
         
         $incident = Incident::create([
@@ -73,7 +73,7 @@ class IncidentController extends Controller
         return response()->json(Incident::findOrFail($id));
     }
 
-    // Return aggregate stats: total, verified, unverified, rejected counts
+    // Return aggregate statistics: total, verified, unverified, rejected counts
     public function stats()
     {
         return response()->json([

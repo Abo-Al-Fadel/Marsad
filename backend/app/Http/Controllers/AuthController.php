@@ -10,7 +10,7 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    // Register a new user and return an API token
+    // Register a new user, log them in, and return an API token
     public function register(Request $request)
     {
         $validated = $request->validate([
@@ -35,7 +35,7 @@ class AuthController extends Controller
         ], 201);
     }
 
-    // Log in with email and password and return an API token
+    // Authenticate user with email/password and return an API token
     public function login(Request $request)
     {
         $request->validate([
@@ -61,7 +61,7 @@ class AuthController extends Controller
         ]);
     }
 
-    // Log out: revoke token and clear the session
+    // Revoke the current API token and clear the session
     public function logout(Request $request)
     {
         if ($request->user()) {
@@ -77,7 +77,7 @@ class AuthController extends Controller
         ]);
     }
 
-    // Return the currently authenticated user's info
+    // Return the currently authenticated user's data
     public function user(Request $request)
     {
         return response()->json($request->user());

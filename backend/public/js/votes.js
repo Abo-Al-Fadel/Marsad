@@ -16,6 +16,11 @@ async function handleVote(id, action) {
       incident.status = result.status;
     }
 
+    // Immediately update global state so auto-refresh doesn't remove the glow
+    if (typeof currentUserVotes !== 'undefined') {
+      currentUserVotes[id] = result.vote;
+    }
+
     updateVoteUI(id, result.vote, result);
   } catch (err) {
     showToast(err.message || 'Vote failed.', 'error');
