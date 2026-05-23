@@ -185,4 +185,64 @@
       </div>
     </div>
   </div>
+
+  <!-- Edit Incident Modal -->
+  <div class="modal-overlay" id="edit-incident-modal">
+    <div class="modal" style="display: flex; flex-direction: column;">
+      <button class="modal__close" id="edit-modal-close" aria-label="Close edit modal">&times;</button>
+      <h2 class="modal__title">Edit Incident</h2>
+      <form id="edit-incident-form" class="form" style="margin-top: 16px;">
+        <input type="hidden" id="edit-incident-id">
+        
+        <div class="form__group autocomplete-wrapper form__group-wrapper">
+          <label class="form__label" for="edit-location">Location</label>
+          <input type="text" class="form__input" id="edit-location" required autocomplete="off">
+          <div class="autocomplete-list" id="edit-location-list"></div>
+        </div>
+        
+        <div class="form__group autocomplete-wrapper form__group-wrapper">
+          <label class="form__label" for="edit-type">Incident Type</label>
+          <input type="text" class="form__input" id="edit-type" required autocomplete="off">
+          <div class="autocomplete-list" id="edit-type-list"></div>
+        </div>
+
+        <div class="form__group">
+          <label class="form__label" for="edit-date">Date & Time</label>
+          <input type="datetime-local" class="form__input" id="edit-date" required>
+        </div>
+
+        <div class="form__group">
+          <label class="form__label" for="edit-note">Additional Details</label>
+          <textarea class="form__input form__textarea" id="edit-note" rows="4"></textarea>
+        </div>
+
+        <div id="edit-error" class="form__error" style="display: none; margin-bottom: 12px;"></div>
+
+        <button type="submit" class="button button--primary" style="width: 100%; padding: 14px; font-size: 0.9rem; font-weight: 700; background-color: var(--red-primary); color: #fff; border: none; border-radius: var(--radius-sm); letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all 0.2s ease;">Save Changes</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div class="modal-overlay" id="delete-confirm-modal">
+    <div class="modal" style="text-align: center; max-width: 400px;">
+      <button class="modal__close" aria-label="Close">&times;</button>
+      <div style="margin: 16px 0 8px;">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </div>
+      <h2 class="modal__title" style="margin-bottom: 8px;">Delete Incident</h2>
+      <p style="color: var(--text-secondary); font-size: 0.88rem; margin-bottom: 24px;">
+        Are you sure you want to delete this incident report?<br>
+        <strong style="color: var(--text-primary);">This action cannot be undone.</strong>
+      </p>
+      <div style="display: flex; gap: 12px; justify-content: center;">
+        <button class="delete-confirm__cancel" style="padding: 10px 24px; font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); background-color: var(--bg-surface-alt); border: 1px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s ease;">Cancel</button>
+        <button class="delete-confirm__confirm" style="padding: 10px 24px; font-size: 0.82rem; font-weight: 700; color: #fff; background-color: #dc2626; border: none; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s ease;">Delete</button>
+      </div>
+    </div>
+  </div>
 @endsection

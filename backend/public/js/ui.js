@@ -28,10 +28,47 @@ function renderCards(data, userVotes) {
   }
   if (emptyState) emptyState.style.display = 'none';
   const votes = userVotes || {};
+  const currentUser = MarsadAPI.getUser();
+  
   container.innerHTML = data.map(incident => {
     const votedAction = votes[incident.id];
     const confirmClasses = ['vote-btn', 'vote-btn--confirm', votedAction === 'confirm' ? 'vote-btn--active-confirm' : ''].filter(Boolean).join(' ');
     const rejectClasses = ['vote-btn', 'vote-btn--reject', votedAction === 'reject' ? 'vote-btn--active-reject' : ''].filter(Boolean).join(' ');
+    
+    // Check if the current user owns this incident
+    const isOwner = currentUser && incident.user_id === currentUser.id;
+    // Check if within 30 minutes of creation
+    const createdDate = new Date(incident.created_at);
+    const now = new Date();
+    const minutesSinceCreation = (now - createdDate) / (1000 * 60);
+    const isEditable = isOwner && minutesSinceCreation <= 30;
+
+    let ownerControls = '';
+    if (isOwner) {
+      const editBtn = isEditable 
+            ? `<button onclick="openEditModal(${incident.id})" style="background:none; border:1px solid var(--border-color); padding:0; cursor:pointer; color:var(--text-secondary); line-height:0; width:28px; height:28px; display:inline-flex; align-items:center; justify-content:center; border-radius:50%; transition:all 0.15s ease;" aria-label="Edit" onmouseover="this.style.backgroundColor='var(--bg-surface-alt)'; this.style.borderColor='var(--text-muted)'; this.style.color='var(--text-primary)';" onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='var(--border-color)'; this.style.color='var(--text-secondary)';">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                  <path d="M15 5l4 4"/>
+                </svg>
+              </button>`
+            : '';
+      ownerControls = `
+        <div style="display:flex; gap:6px; margin-right:auto; margin-left:8px;">
+          <button onclick="openDeleteConfirm(${incident.id})" style="background:none; border:1px solid rgba(239,68,68,0.3); padding:0; cursor:pointer; color:#ef4444; line-height:0; width:28px; height:28px; display:inline-flex; align-items:center; justify-content:center; border-radius:50%; transition:all 0.15s ease;" aria-label="Delete" onmouseover="this.style.backgroundColor='rgba(239,68,68,0.1)'; this.style.borderColor='#ef4444'; this.style.color='#ff6666';" onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='rgba(239,68,68,0.3)'; this.style.color='#ef4444';">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+              <path d="M10 11v6"/>
+              <path d="M14 11v6"/>
+              <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+            </svg>
+          </button>
+          ${editBtn}
+        </div>
+      `;
+    }
+
     return `
     <article class="incident-card" data-id="${incident.id}">
       <div class="incident-card__header">
@@ -56,7 +93,8 @@ function renderCards(data, userVotes) {
       ${incident.note ? `<p class="incident-card__note">${incident.note}</p>` : ''}
       <div class="incident-card__footer">
         <span class="status-badge status-badge--${statusClass(incident.status)}">${incident.status}</span>
-        <div class="vote-group">
+        ${ownerControls}
+        <div class="vote-group" ${isOwner ? 'style="margin-left:0;"' : ''}>
           <button class="${confirmClasses}" onclick="handleVote(${incident.id}, 'confirm')" aria-label="Confirm incident">
             ${SVG_THUMBS_UP} <span class="vote-btn__count" id="confirm-${incident.id}">${incident.confirms}</span>
           </button>
@@ -250,9 +288,206 @@ function initIncidentModal() {
     const card = e.target.closest('.incident-card');
     if (!card) return;
     if (e.target.closest('.vote-group')) return;
+    // Don't open detail modal if clicking any button (votes, edit, delete)
+    if (e.target.closest('button')) return;
     const id = parseInt(card.dataset.id, 10);
     openIncidentModal(id);
   });
+}
+
+// ----------------------------------------------------
+// Edit & Delete Specific UI Logic
+// ----------------------------------------------------
+
+async function deleteIncidentPrompt(id) {
+  // Close the confirmation modal
+  const confirmModal = document.getElementById('delete-confirm-modal');
+  if (confirmModal) confirmModal.classList.remove('modal-overlay--visible');
+  document.body.style.overflow = '';
+
+  try {
+    await MarsadAPI.deleteIncident(id);
+    showToast('Incident deleted successfully.', 'success');
+    refreshIncidents();
+  } catch (err) {
+    showToast(err.message || 'Failed to delete incident.', 'error');
+  }
+}
+
+function openDeleteConfirm(id) {
+  const modal = document.getElementById('delete-confirm-modal');
+  if (!modal) return;
+  modal.dataset.incidentId = id;
+  modal.classList.add('modal-overlay--visible');
+  document.body.style.overflow = 'hidden';
+}
+
+function initDeleteConfirmModal() {
+  const modal = document.getElementById('delete-confirm-modal');
+  if (!modal) return;
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.classList.remove('modal-overlay--visible');
+      document.body.style.overflow = '';
+    }
+  });
+
+  const closeBtn = modal.querySelector('.modal__close');
+  if (closeBtn) closeBtn.addEventListener('click', () => {
+    modal.classList.remove('modal-overlay--visible');
+    document.body.style.overflow = '';
+  });
+
+  const cancelBtn = modal.querySelector('.delete-confirm__cancel');
+  if (cancelBtn) cancelBtn.addEventListener('click', () => {
+    modal.classList.remove('modal-overlay--visible');
+    document.body.style.overflow = '';
+  });
+
+  const confirmBtn = modal.querySelector('.delete-confirm__confirm');
+  if (confirmBtn) confirmBtn.addEventListener('click', () => {
+    const id = parseInt(modal.dataset.incidentId, 10);
+    if (id) deleteIncidentPrompt(id);
+  });
+}
+
+function openEditModal(id) {
+  const incident = incidents.find(i => i.id === id);
+  if (!incident) return;
+  
+  const modal = document.getElementById('edit-incident-modal');
+  if (!modal) return;
+  
+  // Set min/max on the datetime input (last 24h only)
+  setMinDateTime('edit-date');
+  
+  // Pre-fill the form
+  document.getElementById('edit-incident-id').value = incident.id;
+  document.getElementById('edit-location').value = incident.location;
+  document.getElementById('edit-type').value = incident.type;
+  
+  // Convert standard datetime string to datetime-local format (YYYY-MM-DDTHH:mm)
+  const dt = new Date(incident.time);
+  const pad = (n) => String(n).padStart(2, '0');
+  const localIso = dt.getFullYear() + '-' + pad(dt.getMonth() + 1) + '-' + pad(dt.getDate()) + 'T' + pad(dt.getHours()) + ':' + pad(dt.getMinutes());
+  document.getElementById('edit-date').value = localIso;
+  
+  document.getElementById('edit-note').value = incident.note || '';
+  
+  // Show modal
+  modal.classList.add('modal-overlay--visible');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeEditModal() {
+  const modal = document.getElementById('edit-incident-modal');
+  if (!modal) return;
+  modal.classList.remove('modal-overlay--visible');
+  document.body.style.overflow = '';
+}
+
+function initEditModal() {
+  const modal = document.getElementById('edit-incident-modal');
+  if (!modal) return;
+
+  // Initializing autocomplete for the edit modal elements
+  if (typeof lebaneseLocations !== 'undefined') {
+    initAutocomplete('edit-location', 'edit-location-list', lebaneseLocations, null, false);
+  }
+  if (typeof incidentTypes !== 'undefined') {
+    initAutocomplete('edit-type', 'edit-type-list', incidentTypes, null, true);
+  }
+
+  const closeBtn = document.getElementById('edit-modal-close');
+  if (closeBtn) closeBtn.addEventListener('click', closeEditModal);
+  
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeEditModal();
+  });
+
+  const form = document.getElementById('edit-incident-form');
+  if (form) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      // --- Client-side validation (same as report form) ---
+      const errorEl = document.getElementById('edit-error');
+      errorEl.style.display = 'none';
+      errorEl.textContent = '';
+      
+      const location = document.getElementById('edit-location').value.trim();
+      const type = document.getElementById('edit-type').value.trim();
+      const time = document.getElementById('edit-date').value;
+      const note = document.getElementById('edit-note').value.trim();
+
+      let isValid = true;
+
+      if (!location) {
+        errorEl.textContent = 'Please enter a location.';
+        errorEl.style.display = 'block';
+        isValid = false;
+      } else if (!lebaneseLocations.includes(location)) {
+        errorEl.textContent = 'Please select a valid location.';
+        errorEl.style.display = 'block';
+        isValid = false;
+      }
+
+      if (!type) {
+        errorEl.textContent = 'Please enter an incident type.';
+        errorEl.style.display = 'block';
+        isValid = false;
+      } else if (!incidentTypes.includes(type)) {
+        errorEl.textContent = 'Please select a valid incident type.';
+        errorEl.style.display = 'block';
+        isValid = false;
+      }
+
+      if (!time) {
+        errorEl.textContent = 'Please select the time of incident.';
+        errorEl.style.display = 'block';
+        isValid = false;
+      } else {
+        const selectedTime = new Date(time);
+        const now = new Date();
+        const past = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        if (selectedTime > now) {
+          errorEl.textContent = 'Cannot report an incident in the future.';
+          errorEl.style.display = 'block';
+          isValid = false;
+        } else if (selectedTime < past) {
+          errorEl.textContent = 'Incident must be within the last 24 hours.';
+          errorEl.style.display = 'block';
+          isValid = false;
+        }
+      }
+
+      if (!isValid) return;
+      // --- End validation ---
+
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const originalText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Saving...';
+      
+      try {
+        const id = document.getElementById('edit-incident-id').value;
+        
+        await MarsadAPI.updateIncident(id, location, type, time, note || null);
+        
+        showToast('Incident updated successfully.', 'success');
+        closeEditModal();
+        refreshIncidents();
+        
+      } catch (err) {
+        errorEl.textContent = err.message || Object.values(err.errors || {})[0]?.[0] || 'Update failed.';
+        errorEl.style.display = 'block';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+  }
+    });
+  }
 }
 
 let autoRefreshInterval = null;

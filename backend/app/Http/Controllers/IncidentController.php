@@ -83,4 +83,52 @@ class IncidentController extends Controller
             'rejected'   => Incident::where('status', 'Rejected')->count(),
         ]);
     }
+
+    // Update an existing incident (time-limited to 30 mins, owner only)
+    public function update(Request $request, $id)
+    {
+        $incident = Incident::findOrFail($id);
+
+        if ($incident->user_id !== $request->user()->id) {
+            return response()->json(['message' => 'Unauthorized. You can only edit your own reports.'], 403);
+        }
+
+        if ($incident->created_at->diffInMinutes(now()) > 30) {
+            return response()->json(['message' => 'Time limit exceeded. You can only edit reports within 30 minutes of creation.'], 403);
+        }
+
+        $validated = $request->validate([
+            'location' => 'required|string|max:255',
+            'type'     => 'required|string|max:100',
+            'time'     => 'required|date',
+            'note'     => 'nullable|string|max:2000',
+        ]);
+
+        $incident->update([
+            'title'    => $validated['type'] . ' reported in ' . $validated['location'],
+            'location' => $validated['location'],
+            'type'     => $validated['type'],
+            'time'     => $validated['time'],
+            'note'     => $validated['note'] ?? null,
+        ]);
+
+        return response()->json([
+            'message'  => 'Incident updated successfully.',
+            'incident' => $incident,
+        ]);
+    }
+
+    // Delete an incident (owner only)
+    public function destroy(Request $request, $id)
+    {
+        $incident = Incident::findOrFail($id);
+
+        if ($incident->user_id !== $request->user()->id) {
+            return response()->json(['message' => 'Unauthorized. You can only delete your own reports.'], 403);
+        }
+
+        $incident->delete();
+
+        return response()->json(['message' => 'Incident deleted successfully.']);
+    }
 }

@@ -53,6 +53,8 @@ document.addEventListener('DOMContentLoaded', async function () {
       });
     }
     initIncidentModal();
+    initEditModal();
+    initDeleteConfirmModal();
     startAutoRefresh();
   }
 

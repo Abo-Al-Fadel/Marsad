@@ -142,6 +142,18 @@ const MarsadAPI = {
     });
   },
 
+  // Update an existing incident report
+  async updateIncident(id, location, type, time, note) {
+    return await this.request('PUT', `/incidents/${id}`, {
+      location, type, time, note,
+    });
+  },
+
+  // Delete an incident report
+  async deleteIncident(id) {
+    return await this.request('DELETE', `/incidents/${id}`);
+  },
+
   // Get dashboard statistics
   async getStats() {
     return await this.request('GET', '/stats', null, false);

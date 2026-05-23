@@ -1187,6 +1187,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
 .form__error::before {
   content: '⚠';
   font-size: 0.72rem;
+  margin-right: 4px;
 }
 
 .form__input--error,
@@ -1198,7 +1199,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
 
 .form__submit {
   width: 100%;
-  padding: 12px;
+  padding: 14px;
   font-size: 0.85rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -1219,6 +1220,54 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
 
 .form__submit:active {
   transform: scale(0.98);
+}
+
+/* Edit modal submit button */
+.button--primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 24px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #fff;
+  background-color: var(--red-primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.button--primary:hover {
+  background-color: var(--red-accent);
+  box-shadow: 0 0 16px var(--red-glow);
+}
+
+.button--primary:active {
+  transform: scale(0.98);
+}
+
+.button--primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Delete confirm modal buttons */
+.delete-confirm__cancel:hover {
+  background-color: var(--bg-elevated);
+  border-color: var(--text-muted);
+  color: var(--text-primary);
+}
+
+.delete-confirm__confirm:hover {
+  background-color: #ef4444;
+  box-shadow: 0 0 12px rgba(220, 38, 38, 0.4);
+}
+
+.delete-confirm__confirm:active {
+  transform: scale(0.97);
 }
 
 .form__footer {

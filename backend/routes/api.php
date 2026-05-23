@@ -20,6 +20,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user',    [AuthController::class, 'user']);    // Get current logged-in user
 
     Route::post('/incidents', [IncidentController::class, 'store']); // Submit new incident report
+    Route::put('/incidents/{id}', [IncidentController::class, 'update']);         // Edit an existing incident
+    Route::delete('/incidents/{id}', [IncidentController::class, 'destroy']);     // Delete an existing incident
     Route::post('/incidents/{id}/vote', [VoteController::class, 'vote']);         // Cast/switch/remove vote
     Route::get('/incidents/{id}/vote',  [VoteController::class, 'getUserVote']);   // Get user's vote on one incident
     Route::get('/user/votes',           [VoteController::class, 'getUserVotes']);   // Get all user's votes (bulk load)
