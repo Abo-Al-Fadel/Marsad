@@ -71,3 +71,18 @@ You can log in with the default test account:
 - `backend/public/js/`: Contains all the JavaScript that connects the frontend to the backend API.
 - `backend/resources/views/`: Contains the HTML/Blade files for the web pages.
 - `backend/routes/`: Contains the API endpoints and web routes.
+
+---
+
+## 🔗 Database Relations (How Data is Connected)
+
+To understand how the database works, here is the relationship between the 3 main models:
+
+1. **User (1-to-Many) Incidents:**
+   A single User can report many Incidents. Every Incident belongs to exactly one User.
+2. **User (1-to-Many) Votes:**
+   A single User can cast many Votes. Every Vote belongs to exactly one User.
+3. **Incident (1-to-Many) Votes:**
+   A single Incident can have many Votes from different users.
+4. **Unique Vote Constraint:**
+   A User can only have **one** Vote per Incident. If they vote again, their previous vote is updated or removed (toggled).

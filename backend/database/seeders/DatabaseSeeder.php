@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
-    // Seed the database with a demo user and 12 sample incidents
+    //database with a demo user and 12 sample incidents
     public function run(): void
     {
         $user = User::create([

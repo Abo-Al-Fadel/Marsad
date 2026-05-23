@@ -46,9 +46,9 @@ class IncidentController extends Controller
             'time'     => 'required|date',
             'note'     => 'nullable|string|max:2000',
         ]);
-
+        // auto title
         $title = $validated['type'] . ' reported in ' . $validated['location'];
-
+        
         $incident = Incident::create([
             'user_id'  => $request->user()->id,
             'title'    => $title,

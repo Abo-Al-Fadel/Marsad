@@ -8,7 +8,6 @@ use Illuminate\Http\Request;
 
 class VoteController extends Controller
 {
-    // Cast, switch, or toggle a vote on an incident
     // Same action again = remove vote, different action = switch vote
     public function vote(Request $request, $incidentId)
     {

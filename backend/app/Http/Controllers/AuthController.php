@@ -35,7 +35,7 @@ class AuthController extends Controller
         ], 201);
     }
 
-    // Log in with email and password, return an API token
+    // Log in with email and password and return an API token
     public function login(Request $request)
     {
         $request->validate([
