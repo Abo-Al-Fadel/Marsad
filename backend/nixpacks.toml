@@ -19,9 +19,17 @@
 [phases.install]
 cmds = ["composer install --no-dev --optimize-autoloader --no-interaction"]
 
+# Note there is deliberately no `php artisan config:cache` here.
+#
+# The build runs before the service's environment is finalised, so caching the
+# config at this point freezes every env() value as it was at build time. Any
+# variable added afterwards is then invisible to config() until the next full
+# rebuild, which is a confusing failure: env('X') reads correctly while
+# config('x') keeps returning the stale value.
+#
+# Route and view caches are safe because neither depends on the environment.
 [phases.build]
 cmds = [
-  "php artisan config:cache",
   "php artisan route:cache",
   "php artisan view:cache",
 ]
