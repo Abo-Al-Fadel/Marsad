@@ -218,6 +218,24 @@ function initBackToTop() {
   });
 }
 
+// Let the visitor dismiss the sample-data notice; remembered for the session
+// only, so it reappears in a fresh tab rather than being hidden for good.
+function initDemoBar() {
+  const bar = document.getElementById('demo-bar');
+  if (!bar) return;
+  if (sessionStorage.getItem('marsad_demo_dismissed')) {
+    bar.classList.add('demo-bar--hidden');
+    return;
+  }
+  const close = document.getElementById('demo-bar-close');
+  if (close) {
+    close.addEventListener('click', () => {
+      bar.classList.add('demo-bar--hidden');
+      sessionStorage.setItem('marsad_demo_dismissed', '1');
+    });
+  }
+}
+
 // Setup the mobile navigation menu toggle
 function initNavbarToggle() {
   const toggle = document.getElementById('nav-toggle');

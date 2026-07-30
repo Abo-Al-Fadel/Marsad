@@ -15,6 +15,17 @@
 
 <body>
 
+  @if(config('marsad.demo_notice'))
+    {{-- Sample data is fictional; say so plainly so it is never taken for real reporting. --}}
+    <div class="demo-bar" id="demo-bar" role="note">
+      <span class="demo-bar__tag">Demo</span>
+      <span class="demo-bar__text">
+        Portfolio project &mdash; every incident shown is <strong>fictional sample data</strong>, not real reporting.
+      </span>
+      <button class="demo-bar__close" id="demo-bar-close" aria-label="Dismiss notice">&times;</button>
+    </div>
+  @endif
+
   <!-- Navbar -->
   <nav class="navbar" id="navbar">
     <div class="container">

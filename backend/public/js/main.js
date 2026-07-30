@@ -5,6 +5,7 @@ let currentUserVotes = {};
 // Wait for the page to load before setting up our core features
 document.addEventListener('DOMContentLoaded', async function () {
   // Always initialize common UI
+  initDemoBar();
   initNavbarToggle();
   initBackToTop();
   updateNavbarAuth();

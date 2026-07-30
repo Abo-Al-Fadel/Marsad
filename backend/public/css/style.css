@@ -101,6 +101,79 @@ textarea {
   padding-bottom: 48px;
 }
 
+/* Sample-data notice. Sits above the sticky navbar in normal flow, so it
+   scrolls away once the visitor has seen it. */
+.demo-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 9px 44px 9px 16px;
+  position: relative;
+  background-color: var(--bg-surface-alt);
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.demo-bar--hidden {
+  display: none;
+}
+
+.demo-bar__tag {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  background-color: var(--bg-primary);
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+
+.demo-bar__text strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.demo-bar__close {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.demo-bar__close:hover {
+  background-color: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
+@media (max-width: 480px) {
+  .demo-bar {
+    font-size: 0.72rem;
+    padding: 8px 38px 8px 12px;
+    gap: 6px;
+  }
+}
+
 .navbar {
   background-color: var(--bg-surface);
   border-bottom: 1px solid var(--border-color);

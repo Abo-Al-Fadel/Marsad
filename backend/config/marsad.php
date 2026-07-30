@@ -240,4 +240,10 @@ return [
     'max_report_age_hours' => 24,
     'edit_window_minutes' => 30,
 
+    // Shows a banner stating that the incidents on screen are sample data.
+    // Turn this on for any public deployment seeded with DemoSeeder: the site
+    // presents itself as live incident monitoring, and fictional reports about
+    // real places should not be mistaken for real ones.
+    'demo_notice' => (bool) env('DEMO_NOTICE', false),
+
 ];
