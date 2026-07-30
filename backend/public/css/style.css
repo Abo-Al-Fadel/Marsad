@@ -227,7 +227,10 @@ textarea {
 .stats-bar {
   display: flex;
   align-items: center;
-  gap: 16px;
+  /* Without wrapping, the four stat items force the whole dashboard wider than
+     a phone viewport and the page scrolls sideways. */
+  flex-wrap: wrap;
+  gap: 10px 16px;
   margin-bottom: 20px;
   padding: 12px 20px;
   background-color: var(--bg-surface);
@@ -1930,6 +1933,16 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
   .incident-card__meta {
     flex-wrap: wrap;
     gap: 8px;
+  }
+
+  /* Once the stat items wrap onto several rows the separators sit in odd
+     places, so drop them and let the spacing do the separating. */
+  .stats-bar {
+    gap: 10px 14px;
+  }
+
+  .stats-bar__divider {
+    display: none;
   }
 
   .form-container {
