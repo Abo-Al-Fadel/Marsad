@@ -35,37 +35,54 @@ class DemoSeeder extends Seeder
 
     public function run(): void
     {
-        if (User::where('email', 'LIKE', '%' . self::DEMO_DOMAIN)->exists()) {
-            $this->command->warn('Demo data already present - nothing to do.');
+        // Reuse demo accounts if a previous run created them but stopped before
+        // writing the incidents. Keying the "already seeded" check on the users
+        // alone would make such a run impossible to finish.
+        $authors = $this->existingUsers('reporter');
+        $voters  = $this->existingUsers('voter');
+
+        if ($authors === []) {
+            $authors = $this->createUsers($this->authorNames(), 'reporter');
+        }
+
+        if ($voters === []) {
+            $voters = $this->createUsers($this->voterNames(), 'voter');
+        }
+
+        $authorIds = array_map(fn (User $u) => $u->id, $authors);
+
+        if (Incident::whereIn('user_id', $authorIds)->exists()) {
+            $this->command->warn('Demo incidents already present - nothing to do.');
 
             return;
         }
 
         $this->command->info('Seeding demo dataset...');
 
-        $authors = $this->createUsers($this->authorNames(), 'reporter');
-        $voters  = $this->createUsers($this->voterNames(), 'voter');
-
         $created = 0;
 
-        foreach ($this->incidents() as $data) {
-            $author = $authors[array_rand($authors)];
+        // All or nothing, so a failure part way through cannot leave the feed
+        // half populated.
+        DB::transaction(function () use ($authors, $voters, &$created) {
+            foreach ($this->incidents() as $data) {
+                $author = $authors[array_rand($authors)];
 
-            $incident = Incident::create([
-                'user_id'  => $author->id,
-                'title'    => $data['type'] . ' reported in ' . $data['location'],
-                'location' => $data['location'],
-                'type'     => $data['type'],
-                'time'     => now()->subMinutes($data['minutes_ago']),
-                'status'   => 'Unverified',
-                'note'     => $data['note'],
-                'confirms' => 0,
-                'rejects'  => 0,
-            ]);
+                $incident = Incident::create([
+                    'user_id'  => $author->id,
+                    'title'    => $data['type'] . ' reported in ' . $data['location'],
+                    'location' => $data['location'],
+                    'type'     => $data['type'],
+                    'time'     => now()->subMinutes($data['minutes_ago']),
+                    'status'   => 'Unverified',
+                    'note'     => $data['note'],
+                    'confirms' => 0,
+                    'rejects'  => 0,
+                ]);
 
-            $this->applyVotes($incident, $voters, $data['confirms'], $data['rejects']);
-            $created++;
-        }
+                $this->applyVotes($incident, $voters, $data['confirms'], $data['rejects']);
+                $created++;
+            }
+        });
 
         $this->command->info("Created {$created} incidents, "
             . count($authors) . ' reporters, '
@@ -74,6 +91,15 @@ class DemoSeeder extends Seeder
         $this->command->info('Verified: ' . Incident::where('status', 'Verified')->count()
             . ' | Unverified: ' . Incident::where('status', 'Unverified')->count()
             . ' | Rejected: ' . Incident::where('status', 'Rejected')->count());
+    }
+
+    /** @return User[] */
+    private function existingUsers(string $prefix): array
+    {
+        return User::where('email', 'LIKE', $prefix . '%' . self::DEMO_DOMAIN)
+            ->orderBy('id')
+            ->get()
+            ->all();
     }
 
     /** @return User[] */
