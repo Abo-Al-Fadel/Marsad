@@ -4,9 +4,43 @@ namespace App\Http\Controllers;
 
 use App\Models\Incident;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class IncidentController extends Controller
 {
+    // Validation rules shared by store() and update(). The location and type
+    // allowlists and the 24h reporting window are enforced here because the
+    // browser-side checks in forms.js can simply be bypassed.
+    private function incidentRules(): array
+    {
+        $maxAgeHours = (int) config('marsad.max_report_age_hours', 24);
+
+        return [
+            'location' => ['required', 'string', Rule::in(config('marsad.locations'))],
+            'type'     => ['required', 'string', Rule::in(config('marsad.types'))],
+            'time'     => [
+                'required',
+                'date',
+                // A few minutes of slack absorbs clock skew between client and server.
+                'before_or_equal:' . now()->addMinutes(5)->toDateTimeString(),
+                'after_or_equal:' . now()->subHours($maxAgeHours)->toDateTimeString(),
+            ],
+            'note'     => ['nullable', 'string', 'max:2000'],
+        ];
+    }
+
+    private function incidentMessages(): array
+    {
+        $maxAgeHours = (int) config('marsad.max_report_age_hours', 24);
+
+        return [
+            'location.in'             => 'Please select a valid location.',
+            'type.in'                 => 'Please select a valid incident type.',
+            'time.before_or_equal'    => 'Cannot report an incident in the future.',
+            'time.after_or_equal'     => "Incident must be within the last {$maxAgeHours} hours.",
+        ];
+    }
+
     // List all incidents with optional filtering by location, type, status, or free-text search
     public function index(Request $request)
     {
@@ -40,12 +74,7 @@ class IncidentController extends Controller
     // Create a new incident report (auto-generates title, sets status to Unverified)
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'location' => 'required|string|max:255',
-            'type'     => 'required|string|max:100',
-            'time'     => 'required|date',
-            'note'     => 'nullable|string|max:2000',
-        ]);
+        $validated = $request->validate($this->incidentRules(), $this->incidentMessages());
 
         $title = $validated['type'] . ' reported in ' . $validated['location'];
         
@@ -93,16 +122,13 @@ class IncidentController extends Controller
             return response()->json(['message' => 'Unauthorized. You can only edit your own reports.'], 403);
         }
 
-        if ($incident->created_at->diffInMinutes(now()) > 30) {
-            return response()->json(['message' => 'Time limit exceeded. You can only edit reports within 30 minutes of creation.'], 403);
+        $editWindow = (int) config('marsad.edit_window_minutes', 30);
+
+        if ($incident->created_at->diffInMinutes(now()) > $editWindow) {
+            return response()->json(['message' => "Time limit exceeded. You can only edit reports within {$editWindow} minutes of creation."], 403);
         }
 
-        $validated = $request->validate([
-            'location' => 'required|string|max:255',
-            'type'     => 'required|string|max:100',
-            'time'     => 'required|date',
-            'note'     => 'nullable|string|max:2000',
-        ]);
+        $validated = $request->validate($this->incidentRules(), $this->incidentMessages());
 
         $incident->update([
             'title'    => $validated['type'] . ' reported in ' . $validated['location'],
