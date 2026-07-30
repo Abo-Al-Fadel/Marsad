@@ -49,7 +49,11 @@ class AuthController extends Controller
             ]);
         }
 
-        $request->session()->regenerate();
+        // Only stateful (same-origin browser) requests carry a session. Token-only
+        // clients reach this route without one, so guard before touching it.
+        if ($request->hasSession()) {
+            $request->session()->regenerate();
+        }
 
         $user = User::where('email', $request->email)->firstOrFail();
         $token = $user->createToken('auth_token')->plainTextToken;
@@ -64,13 +68,20 @@ class AuthController extends Controller
     // Revoke the current API token and clear the session
     public function logout(Request $request)
     {
-        if ($request->user()) {
-            $request->user()->currentAccessToken()->delete();
+        // When the request is authenticated by session rather than by a Bearer
+        // token, currentAccessToken() is a TransientToken, which has no delete().
+        // Revoking every token also stops the client's stored token from
+        // outliving the logout it can no longer be identified from.
+        if ($user = $request->user()) {
+            $user->tokens()->delete();
         }
 
-        Auth::guard('web')->logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        // Clearing the web session only applies to stateful requests (see login).
+        if ($request->hasSession()) {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
 
         return response()->json([
             'message' => 'Logged out successfully.',
