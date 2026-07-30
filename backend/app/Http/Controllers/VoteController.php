@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Incident;
 use App\Models\Vote;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class VoteController extends Controller
 {
@@ -15,86 +16,81 @@ class VoteController extends Controller
             'action' => 'required|in:confirm,reject',
         ]);
 
-        $incident = Incident::findOrFail($incidentId);
-        $user     = $request->user();
-        $action   = $request->action;
+        $user   = $request->user();
+        $action = $request->action;
 
-        $existingVote = Vote::where('user_id', $user->id)
-            ->where('incident_id', $incident->id)
-            ->first();
+        // The vote counters are denormalised onto the incident row, so the whole
+        // read-modify-write has to be atomic. Without the transaction and row
+        // lock, two people voting at the same time can each read the same count
+        // and one increment is silently lost.
+        $payload = DB::transaction(function () use ($incidentId, $user, $action) {
+            $incident = Incident::lockForUpdate()->findOrFail($incidentId);
 
-        if ($existingVote) {
-            if ($existingVote->action === $action) {
+            $existingVote = Vote::where('user_id', $user->id)
+                ->where('incident_id', $incident->id)
+                ->lockForUpdate()
+                ->first();
+
+            if ($existingVote && $existingVote->action === $action) {
                 // Same action clicked again → undo (remove the vote)
-                if ($action === 'confirm') {
-                    $incident->confirms = max(0, $incident->confirms - 1);
-                } else {
-                    $incident->rejects = max(0, $incident->rejects - 1);
-                }
+                $this->decrement($incident, $action);
                 $existingVote->delete();
-                $incident->save();
-                $incident->recalculateStatus();
 
-                return response()->json([
-                    'message'  => 'Vote removed.',
-                    'vote'     => null,
-                    'confirms' => $incident->confirms,
-                    'rejects'  => $incident->rejects,
-                    'status'   => $incident->status,
-                ]);
-            } else {
+                $message = 'Vote removed.';
+                $vote    = null;
+            } elseif ($existingVote) {
                 // Different action → switch vote (e.g., confirm→reject)
-                if ($existingVote->action === 'confirm') {
-                    $incident->confirms = max(0, $incident->confirms - 1);
-                } else {
-                    $incident->rejects = max(0, $incident->rejects - 1);
-                }
+                $this->decrement($incident, $existingVote->action);
+                $this->increment($incident, $action);
 
                 $existingVote->action = $action;
                 $existingVote->save();
 
-                if ($action === 'confirm') {
-                    $incident->confirms++;
-                } else {
-                    $incident->rejects++;
-                }
-
-                $incident->save();
-                $incident->recalculateStatus();
-
-                return response()->json([
-                    'message'  => 'Vote updated.',
-                    'vote'     => $action,
-                    'confirms' => $incident->confirms,
-                    'rejects'  => $incident->rejects,
-                    'status'   => $incident->status,
+                $message = 'Vote updated.';
+                $vote    = $action;
+            } else {
+                // First time voting on this incident → create new vote record
+                Vote::create([
+                    'user_id'     => $user->id,
+                    'incident_id' => $incident->id,
+                    'action'      => $action,
                 ]);
+
+                $this->increment($incident, $action);
+
+                $message = 'Vote recorded.';
+                $vote    = $action;
             }
-        }
 
-        // First time voting on this incident → create new vote record
-        Vote::create([
-            'user_id'     => $user->id,
-            'incident_id' => $incident->id,
-            'action'      => $action,
-        ]);
+            $incident->recalculateStatus();
+            $incident->save();
 
-        if ($action === 'confirm') {
-            $incident->confirms++;
-        } else {
-            $incident->rejects++;
-        }
+            return [
+                'message'  => $message,
+                'vote'     => $vote,
+                'confirms' => $incident->confirms,
+                'rejects'  => $incident->rejects,
+                'status'   => $incident->status,
+            ];
+        });
 
-        $incident->save();
-        $incident->recalculateStatus();
+        return response()->json($payload);
+    }
 
-        return response()->json([
-            'message'  => 'Vote recorded.',
-            'vote'     => $action,
-            'confirms' => $incident->confirms,
-            'rejects'  => $incident->rejects,
-            'status'   => $incident->status,
-        ]);
+    // Bump the counter matching the given action
+    private function increment(Incident $incident, string $action): void
+    {
+        $column = $action === 'confirm' ? 'confirms' : 'rejects';
+
+        $incident->{$column}++;
+    }
+
+    // Reduce the counter matching the given action, never below zero
+    private function decrement(Incident $incident, string $action): void
+    {
+        $column = $action === 'confirm' ? 'confirms' : 'rejects';
+
+        $incident->{$column} = max(0, $incident->{$column} - 1);
     }
 
     // Get the current user's vote on a specific incident

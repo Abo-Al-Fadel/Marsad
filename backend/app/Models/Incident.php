@@ -34,6 +34,9 @@ class Incident extends Model
 
     // Recalculate status based on community votes
     // +10 difference = Verified, -10 = Rejected, otherwise Unverified
+    //
+    // This only updates the attribute; the caller is responsible for saving, so
+    // a vote can be applied to the counters and the status in a single write.
     public function recalculateStatus(): void
     {
         $diff = $this->confirms - $this->rejects;
@@ -45,7 +48,5 @@ class Incident extends Model
         } else {
             $this->status = 'Unverified';
         }
-
-        $this->save();
     }
 }
