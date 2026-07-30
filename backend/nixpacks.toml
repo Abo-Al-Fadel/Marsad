@@ -1,0 +1,27 @@
+# Build configuration for Railway (Nixpacks).
+#
+# Railway's PHP provider already detects Laravel and serves public/ through
+# nginx + php-fpm, so this file only pins down the two phases that need to
+# differ from the defaults:
+#
+#  1. install - production dependency install, no dev packages.
+#  2. build   - Laravel's config/route/view caches.
+#
+# It also deliberately overrides the install phase so the unused Vite/Tailwind
+# pipeline in package.json is not built on deploy. Nothing in resources/ is
+# referenced by any Blade template (the frontend is plain CSS/JS served from
+# public/), so building it would only add time and a failure point.
+#
+# Database migrations are NOT run here - a build has no database attached.
+# Set them as the service's Pre-Deploy Command in the Railway dashboard:
+#     php artisan migrate --force
+
+[phases.install]
+cmds = ["composer install --no-dev --optimize-autoloader --no-interaction"]
+
+[phases.build]
+cmds = [
+  "php artisan config:cache",
+  "php artisan route:cache",
+  "php artisan view:cache",
+]

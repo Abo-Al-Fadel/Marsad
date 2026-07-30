@@ -3,6 +3,8 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -13,7 +15,21 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
+
+        // Managed hosts (Railway, Render, Fly, a load balancer, ...) terminate
+        // TLS and forward over plain HTTP. Without trusting their headers,
+        // Laravel sees the request as insecure and generates http:// URLs and
+        // non-secure cookies even though the visitor is on HTTPS.
+        $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // A missing record surfaces here as a NotFoundHttpException wrapping the
+        // default message, which names the Eloquent class and the id that was
+        // looked up ("No query results for model [App\Models\Incident] 42").
+        // Callers only need to know it is missing.
+        $exceptions->render(function (NotFoundHttpException $e, Request $request) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Resource not found.'], 404);
+            }
+        });
     })->create();
