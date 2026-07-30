@@ -9,6 +9,7 @@ const locationCoords = {
   "Nabatieh": [33.3779, 35.4838],
   "Zahlé": [33.8463, 35.9020],
   "Byblos": [34.1236, 35.6511],
+  "Jbeil": [34.1236, 35.6511],
 
   // Beirut Areas & Suburbs
   "Dahiyeh": [33.8400, 35.4900],
@@ -27,6 +28,7 @@ const locationCoords = {
   "Antelias": [33.9100, 35.5850],
   "Dbayeh": [33.9200, 35.5780],
   "Hazmieh": [33.8600, 35.5350],
+  "Araya": [33.8353, 35.5806],
   "Baabda": [33.8333, 35.5333],
   "Hadat": [33.8480, 35.5220],
   "Choueifat": [33.8200, 35.5000],
@@ -224,12 +226,12 @@ function createPulseIcon(type) {
 // Build the HTML template for a map marker's popup
 function buildPopupContent(incident) {
   return `
-    <div class="popup-title">${incident.title}</div>
-    <div class="popup-detail"><strong>Location:</strong> ${incident.location}</div>
+    <div class="popup-title">${escapeHtml(incident.title)}</div>
+    <div class="popup-detail"><strong>Location:</strong> ${escapeHtml(incident.location)}</div>
     <div class="popup-detail" style="display:flex; align-items:center; gap:6px;">
-      <strong>Type:</strong> 
-      <span style="display:inline-flex; width:14px; height:14px; color: ${markerColors[incident.type] || '#888888'}">${getTypeIcon(incident.type)}</span> 
-      ${incident.type}
+      <strong>Type:</strong>
+      <span style="display:inline-flex; width:14px; height:14px; color: ${markerColors[incident.type] || '#888888'}">${getTypeIcon(incident.type)}</span>
+      ${escapeHtml(incident.type)}
     </div>
     <div class="popup-detail"><strong>Time:</strong> ${formatTimestamp(incident.time)}</div>
     <div class="popup-detail"><strong>Status:</strong>

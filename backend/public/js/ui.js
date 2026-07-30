@@ -72,10 +72,10 @@ function renderCards(data, userVotes) {
     return `
     <article class="incident-card" data-id="${incident.id}">
       <div class="incident-card__header">
-        <h3 class="incident-card__title">${incident.title}</h3>
+        <h3 class="incident-card__title">${escapeHtml(incident.title)}</h3>
         <span class="incident-card__type incident-card__type--${typeClass(incident.type)}">
           <span class="incident-card__type-icon">${getTypeIcon(incident.type)}</span>
-          ${incident.type}
+          ${escapeHtml(incident.type)}
         </span>
       </div>
       <div class="incident-card__meta">
@@ -83,14 +83,14 @@ function renderCards(data, userVotes) {
           <span class="incident-card__meta-icon">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
           </span>
-          ${incident.location}
+          ${escapeHtml(incident.location)}
         </span>
         <span class="incident-card__meta-item">
           <span class="incident-card__timestamp">${formatTimestamp(incident.time)}</span>
         </span>
         <span class="incident-card__relative-time">${relativeTime(incident.time)}</span>
       </div>
-      ${incident.note ? `<p class="incident-card__note">${incident.note}</p>` : ''}
+      ${incident.note ? `<p class="incident-card__note">${escapeHtml(incident.note)}</p>` : ''}
       <div class="incident-card__footer">
         <span class="status-badge status-badge--${statusClass(incident.status)}">${incident.status}</span>
         ${ownerControls}
@@ -129,12 +129,12 @@ function renderTimeline(data) {
       <div class="timeline__item">
         <span class="timeline__item-time">${extractTime(incident.time)}</span>
         <div class="timeline__item-content">
-          <div class="timeline__item-title">${incident.title}</div>
+          <div class="timeline__item-title">${escapeHtml(incident.title)}</div>
           <div class="timeline__item-location">
             <span class="timeline__item-location-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
             </span>
-            ${incident.location} — ${incident.type}
+            ${escapeHtml(incident.location)} — ${escapeHtml(incident.type)}
           </div>
         </div>
         <div class="timeline__item-badge">
@@ -246,8 +246,8 @@ function openIncidentModal(id) {
   if (titleEl) titleEl.textContent = incident.title;
   if (metaEl) {
     metaEl.innerHTML = `
-      <span class="popup-detail"><strong>Location:</strong> ${incident.location}</span>
-      <span class="popup-detail"><strong>Type:</strong> ${incident.type}</span>
+      <span class="popup-detail"><strong>Location:</strong> ${escapeHtml(incident.location)}</span>
+      <span class="popup-detail"><strong>Type:</strong> ${escapeHtml(incident.type)}</span>
       <span class="popup-detail"><strong>Time:</strong> ${formatTimestamp(incident.time)}</span>
       <span class="popup-detail"><strong>Verified by:</strong> ${incident.confirms} people</span>
       <span class="popup-detail"><strong>Rejected by:</strong> ${incident.rejects} people</span>`;

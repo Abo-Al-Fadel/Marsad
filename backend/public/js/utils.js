@@ -1,3 +1,16 @@
+// Escape user-supplied text before it goes into an innerHTML template.
+// Incident titles, locations, types and notes all originate from user input,
+// so anything interpolated into markup must pass through here.
+function escapeHtml(value) {
+  if (value === null || value === undefined) return '';
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // Helper to construct a timestamp string from days/hours/minutes ago
 function buildTime(daysAgo, hours, minutes) {
   const d = new Date();
